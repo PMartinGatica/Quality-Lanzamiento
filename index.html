@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Explorer | Reporte de Lanzamiento</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+</head>
+<body class="bg-gray-900 text-white">
+
+    <!-- Sección Hero -->
+    <div id="hero" class="h-screen w-full flex flex-col justify-center items-center text-center relative">
+        <div class="video-background">
+            <iframe src="https://player.vimeo.com/video/1068244443?h=6636e4bf73&title=0&byline=0&portrait=0&muted=1&autoplay=1&autopause=0&controls=0&loop=1" frameborder="0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>
+        </div>
+        <div class="video-overlay"></div>
+        <div class="z-10 p-4">
+            <h1 class="text-6xl md:text-8xl font-black uppercase tracking-widest">Explorer</h1>
+            <p id="current-date" class="mt-4 text-lg md:text-xl text-gray-300"></p>
+            <p class="mt-2 text-sm md:text-base text-gray-400 uppercase tracking-widest">Reporte de Lanzamiento</p>
+        </div>
+        <a href="#stats-section" class="absolute bottom-10 z-10">
+            <div class="scroll-down-arrow text-white">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                </svg>
+            </div>
+        </a>
+    </div>
+
+    <!-- 1. Estado de línea -->
+    <div id="stats-section" class="min-h-screen bg-gray-900 flex flex-col items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+        <div class="w-full max-w-7xl mx-auto">
+            <h2 class="text-3xl font-bold text-red-500 mb-6">1. Estado de línea</h2>
+            
+            <!-- Filtros -->
+            <div class="mb-6 flex justify-between items-center flex-wrap gap-4">
+                <div class="flex items-center space-x-4">
+                    <label for="model-filter" class="text-white font-medium">Modelo:</label>
+                    <select id="model-filter" class="bg-gray-800 text-white px-4 py-2 rounded-lg border border-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        <option value="">Cargando modelos...</option>
+                    </select>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <label for="date-filter" class="text-white font-medium">Desde fecha:</label>
+                    <select id="date-filter" class="bg-gray-800 text-white px-4 py-2 rounded-lg border border-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        <option value="">Todas las fechas</option>
+                    </select>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <button id="clear-data-btn" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200">
+                        🗑️ Limpiar Datos Guardados
+                    </button>
+                </div>
+                <div id="loading-indicator" class="hidden">
+                    <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                </div>
+            </div>
+
+            <div class="overflow-x-auto bg-gray-800 p-4 rounded-lg">
+                <table class="min-w-full text-sm text-left text-gray-400">
+                    <thead class="bg-gray-700 text-xs text-gray-300 uppercase">
+                        <tr>
+                            <th scope="col" class="px-4 py-3">Fecha</th>
+                            <th scope="col" class="px-4 py-3">INPUT</th>
+                            <th scope="col" class="px-4 py-3">IFLASH</th>
+                            <th scope="col" class="px-4 py-3">UCT</th>
+                            <th scope="col" class="px-4 py-3">FODTEST</th>
+                            <th scope="col" class="px-4 py-3">XCVR_LT</th>
+                            <th scope="col" class="px-4 py-3">LCDCAL</th>
+                            <th scope="col" class="px-4 py-3">L2VISION</th>
+                            <th scope="col" class="px-4 py-3">L2AR</th>
+                            <th scope="col" class="px-4 py-3">DEPTHCAL</th>
+                            <th scope="col" class="px-4 py-3">DEPTHVAL</th>
+                            <th scope="col" class="px-4 py-3">TELECAL</th>
+                            <th scope="col" class="px-4 py-3">TELEVAL</th>
+                            <th scope="col" class="px-4 py-3">CFC</th>
+                            <th scope="col" class="px-4 py-3">CQA1</th>
+                            <th scope="col" class="px-4 py-3">RUNNING</th>
+                            <th scope="col" class="px-4 py-3">CQA2</th>
+                            <th scope="col" class="px-4 py-3">Defectos</th>
+                            <th scope="col" class="px-4 py-3">CQA1 Def.</th>
+                            <th scope="col" class="px-4 py-3">CQA2 Def.</th>
+                            <th scope="col" class="px-4 py-3">DPHU</th>
+                            <th scope="col" class="px-4 py-3">Meta</th>
+                            <th scope="col" class="px-4 py-3">Salida</th>
+                        </tr>
+                    </thead>
+                    <tbody id="line-status-tbody" class="bg-gray-800">
+                        <tr>
+                            <td colspan="23" class="px-6 py-8 text-center text-gray-400">
+                                Seleccione un modelo para ver los datos
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="text-center mt-12">
+                <a href="#reports-section" class="text-indigo-400 hover:text-indigo-300 text-lg">Ver Reportes de Procesos &darr;</a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 2. Reportes de Procesos -->
+    <div id="reports-section" class="min-h-screen bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
+        <div class="w-full max-w-7xl mx-auto">
+            <div class="flex justify-between items-center mb-8">
+                <h2 class="text-3xl font-bold text-white">2. Reportes MQS - FTY por Proceso</h2>
+                <button 
+                    id="download-pdf-btn" 
+                    class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors flex items-center space-x-2"
+                >
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-4-4m4 4l4-4m-12 8h16"/>
+                    </svg>
+                    <span>Descargar PDF</span>
+                </button>
+            </div>
+            <div class="space-y-12" id="process-reports-container">
+                <!-- Los reportes se generarán dinámicamente aquí -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- 3. Seguimiento de Problemas -->
+    <div id="issues-section" class="min-h-screen bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
+        <div class="w-full max-w-7xl mx-auto">
+            <h2 class="text-3xl font-bold text-white mb-8">3. Seguimiento de Problemas</h2>
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div class="lg:col-span-2 bg-gray-800 p-6 rounded-lg shadow-lg">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm text-left text-gray-400">
+                            <thead class="text-xs text-gray-300 uppercase bg-gray-700">
+                                <tr>
+                                
+                                    <th class="px-4 py-3">Producto</th>
+                                    <th class="px-4 py-3">Descripción del Problema</th>
+                                    <th class="px-4 py-3">Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody id="issues-table-body">
+                                <tr data-id="5" class="border-b border-gray-700">
+                                
+                                    <td class="px-4 py-2 text-white">EXPLORER</td>
+                                    <td class="px-4 py-2 text-white">CQA1 2000</td>
+                                    <td class="px-4 py-2">
+                                        <select class="status-select w-full p-2 rounded border-0 text-white font-bold" data-status-select>
+                                            <option value="Open" selected>Abierto</option>
+                                            <option value="On going">En Progreso</option>
+                                            <option value="Closed">Cerrado</option>
+                                        </select>
+                                    </td>
+                                </tr>
+                                <tr data-id="6" class="border-b border-gray-700">
+                                    
+                                    <td class="px-4 py-2 text-white">EXPLORER</td>
+                                    <td class="px-4 py-2 text-white">RUNNING: 24hs, 2000</td>
+                                    <td class="px-4 py-2">
+                                        <select class="status-select w-full p-2 rounded border-0 text-white font-bold" data-status-select>
+                                            <option value="Open" selected>Abierto</option>
+                                            <option value="On going">En Progreso</option>
+                                            <option value="Closed">Cerrado</option>
+                                        </select>
+                                    </td>
+                                </tr>
+                                <tr data-id="7" class="border-b border-gray-700">
+                            
+                                    <td class="px-4 py-2 text-white">EXPLORER</td>
+                                    <td class="px-4 py-2 text-white">CQA2 2000</td>
+                                    <td class="px-4 py-2">
+                                        <select class="status-select w-full p-2 rounded border-0 text-white font-bold" data-status-select>
+                                            <option value="Open" selected>Abierto</option>
+                                            <option value="On going">En Progreso</option>
+                                            <option value="Closed">Cerrado</option>
+                                        </select>
+                                    </td>
+                                </tr>
+                                <tr data-id="10" class="border-b border-gray-700">
+                                
+                                    <td class="px-4 py-2 text-white">EXPLORER</td>
+                                    <td class="px-4 py-2 text-white">BO PACKING</td>
+                                    <td class="px-4 py-2">
+                                        <select class="status-select w-full p-2 rounded border-0 text-white font-bold" data-status-select>
+                                            <option value="Open" selected>Abierto</option>
+                                            <option value="On going">En Progreso</option>
+                                            <option value="Closed">Cerrado</option>
+                                        </select>
+                                    </td>
+                                </tr>
+                                <tr data-id="11" class="border-b border-gray-700">
+                            
+                                    <td class="px-4 py-2 text-white">EXPLORER</td>
+                                    <td class="px-4 py-2 text-white">PSO Videos</td>
+                                    <td class="px-4 py-2">
+                                        <select class="status-select w-full p-2 rounded border-0 text-white font-bold" data-status-select>
+                                            <option value="Open">Abierto</option>
+                                            <option value="On going" selected>En Progreso</option>
+                                            <option value="Closed">Cerrado</option>
+                                        </select>
+                                    </td>
+                                </tr>
+                                <tr data-id="12" class="border-b border-gray-700">
+                
+                                    <td class="px-4 py-2 text-white">EXPLORER</td>
+                                    <td class="px-4 py-2 text-white">ORT: 3 unidades</td>
+                                    <td class="px-4 py-2">
+                                        <select class="status-select w-full p-2 rounded border-0 text-white font-bold" data-status-select>
+                                            <option value="Open">Abierto</option>
+                                            <option value="On going" selected>En Progreso</option>
+                                            <option value="Closed">Cerrado</option>
+                                        </select>
+                                    </td>
+                                </tr>
+                                <tr data-id="13" class="border-b border-gray-700">
+                                   
+                                    <td class="px-4 py-2 text-white">EXPLORER</td>
+                                    <td class="px-4 py-2 text-white">Consumer screen protector: 100pcs.</td>
+                                    <td class="px-4 py-2">
+                                        <select class="status-select w-full p-2 rounded border-0 text-white font-bold" data-status-select>
+                                            <option value="Open" selected>Abierto</option>
+                                            <option value="On going">En Progreso</option>
+                                            <option value="Closed">Cerrado</option>
+                                        </select>
+                                    </td>
+                                </tr>
+                                <tr data-id="22" class="border-b border-gray-700">
+                                    
+                                    <td class="px-4 py-2 text-white">EXPLORER</td>
+                                    <td class="px-4 py-2 text-white">200 Gate: 100
+                                        Unidades no destructivo.</td>
+                                    <td class="px-4 py-2">
+                                        <select class="status-select w-full p-2 rounded border-0 text-white font-bold" data-status-select>
+                                            <option value="Open" selected>Abierto</option>
+                                            <option value="On going">En Progreso</option>
+                                            <option value="Closed">Cerrado</option>
+                                        </select>
+                                    </td>
+                                </tr>
+                                <tr data-id="22" class="border-b border-gray-700">
+                                    
+                                    <td class="px-4 py-2 text-white">EXPLORER</td>
+                                    <td class="px-4 py-2 text-white">R&R</td>
+                                    <td class="px-4 py-2">
+                                        <select class="status-select w-full p-2 rounded border-0 text-white font-bold" data-status-select>
+                                            <option value="Open" selected>Abierto</option>
+                                            <option value="On going">En Progreso</option>
+                                            <option value="Closed">Cerrado</option>
+                                        </select>
+                                    </td>
+                                </tr>
+                                <tr data-id="22" class="border-b border-gray-700">
+                                    
+                                    <td class="px-4 py-2 text-white">EXPLORER</td>
+                                    <td class="px-4 py-2 text-white">AMFE CFC</td>
+                                    <td class="px-4 py-2">
+                                        <select class="status-select w-full p-2 rounded border-0 text-white font-bold" data-status-select>
+                                            <option value="Open" selected>Abierto</option>
+                                            <option value="On going">En Progreso</option>
+                                            <option value="Closed">Cerrado</option>
+                                        </select>
+                                    </td>
+                                </tr>
+                                <tr data-id="22" class="border-b border-gray-700">
+                                    
+                                    <td class="px-4 py-2 text-white">EXPLORER</td>
+                                    <td class="px-4 py-2 text-white">PSA activation check: 10pcs. Battery cover, camera deco y Battery PSA.</td>
+                                    <td class="px-4 py-2">
+                                        <select class="status-select w-full p-2 rounded border-0 text-white font-bold" data-status-select>
+                                            <option value="Open" selected>Abierto</option>
+                                            <option value="On going">En Progreso</option>
+                                            <option value="Closed">Cerrado</option>
+                                        </select>
+                                    </td>
+                                </tr>
+                                <tr data-id="22" class="border-b border-gray-700">
+                                    
+                                    <td class="px-4 py-2 text-white">EXPLORER</td>
+                                    <td class="px-4 py-2 text-white">ISTA (packing). Prioridad.</td>
+                                    <td class="px-4 py-2">
+                                        <select class="status-select w-full p-2 rounded border-0 text-white font-bold" data-status-select>
+                                            <option value="Open" selected>Abierto</option>
+                                            <option value="On going">En Progreso</option>
+                                            <option value="Closed">Cerrado</option>
+                                        </select>
+                                    </td>
+                                </tr>
+                                <tr data-id="22" class="border-b border-gray-700">
+                                    
+                                    <td class="px-4 py-2 text-white">EXPLORER</td>
+                                    <td class="px-4 py-2 text-white">ALT: 17 muestras (destructivo). Prioridad. Shower test - Tumbler test</td>
+                                    <td class="px-4 py-2">
+                                        <select class="status-select w-full p-2 rounded border-0 text-white font-bold" data-status-select>
+                                            <option value="Open" selected>Abierto</option>
+                                            <option value="On going">En Progreso</option>
+                                            <option value="Closed">Cerrado</option>
+                                        </select>
+                                    </td>
+                                </tr>
+                                <tr data-id="22" class="border-b border-gray-700">
+                                    
+                                    <td class="px-4 py-2 text-white">EXPLORER</td>
+                                    <td class="px-4 py-2 text-white">BO SW</td>
+                                    <td class="px-4 py-2">
+                                        <select class="status-select w-full p-2 rounded border-0 text-white font-bold" data-status-select>
+                                            <option value="Open" selected>Abierto</option>
+                                            <option value="On going">En Progreso</option>
+                                            <option value="Closed">Cerrado</option>
+                                        </select>
+                                    </td>
+                                </tr>
+                                <tr data-id="22" class="border-b border-gray-700">
+                                    
+                                    <td class="px-4 py-2 text-white">EXPLORER</td>
+                                    <td class="px-4 py-2 text-white">Droptest</td>
+                                    <td class="px-4 py-2">
+                                        <select class="status-select w-full p-2 rounded border-0 text-white font-bold" data-status-select>
+                                            <option value="Open" selected>Abierto</option>
+                                            <option value="On going">En Progreso</option>
+                                            <option value="Closed">Cerrado</option>
+                                        </select>
+                                    </td>
+                                </tr>
+                                <tr data-id="22" class="border-b border-gray-700">
+                                    
+                                    <td class="px-4 py-2 text-white">EXPLORER</td>
+                                    <td class="px-4 py-2 text-white">Instructivo CQA1 y CQA2</td>
+                                    <td class="px-4 py-2">
+                                        <select class="status-select w-full p-2 rounded border-0 text-white font-bold" data-status-select>
+                                            <option value="Open" selected>Abierto</option>
+                                            <option value="On going">En Progreso</option>
+                                            <option value="Closed">Cerrado</option>
+                                        </select>
+                                    </td>
+                                </tr>
+                                <tr data-id="22" class="border-b border-gray-700">
+                                    
+                                    <td class="px-4 py-2 text-white">EXPLORER</td>
+                                    <td class="px-4 py-2 text-white">IQC: Cosmético Funcional</td>
+                                    <td class="px-4 py-2">
+                                        <select class="status-select w-full p-2 rounded border-0 text-white font-bold" data-status-select>
+                                            <option value="Open" selected>Abierto</option>
+                                            <option value="On going">En Progreso</option>
+                                            <option value="Closed">Cerrado</option>
+                                        </select>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+
+   
+
+    <script src="script.js"></script>
+    <script>
+        Chart.register(ChartDataLabels);
+    </script>
+</body>
+</html>
